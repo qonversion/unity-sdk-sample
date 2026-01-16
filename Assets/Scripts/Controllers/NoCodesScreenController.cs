@@ -496,7 +496,7 @@ namespace QonversionSample
         private void EnablePurchaseDelegate()
         {
             // Find SampleApp and call EnableCustomPurchaseDelegate
-            var sampleApp = UnityEngine.Object.FindObjectOfType<SampleApp>();
+            var sampleApp = UnityEngine.Object.FindFirstObjectByType<SampleApp>();
             if (sampleApp != null)
             {
                 sampleApp.EnableCustomPurchaseDelegate();

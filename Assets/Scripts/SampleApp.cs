@@ -211,9 +211,12 @@ namespace QonversionSample
             _appState.AddNoCodesEvent($"🛒 Purchase requested: {product.QonversionId}");
 
             // Use Qonversion SDK to perform the purchase
-            Qonversion.GetSharedInstance().PurchaseProduct(product, (entitlements, error, isCancelled) =>
+            Qonversion.GetSharedInstance().Purchase(product, (result) =>
             {
-                if (isCancelled)
+                // Log full PurchaseResult details
+                LogPurchaseResult(result, "[NoCodes]");
+                
+                if (result.IsCanceled)
                 {
                     Debug.Log("⚠️ [NoCodes] Purchase cancelled by user");
                     _appState.AddNoCodesEvent("⚠️ Purchase cancelled by user");
@@ -221,17 +224,20 @@ namespace QonversionSample
                     return;
                 }
 
-                if (error != null)
+                if (result.Error != null)
                 {
-                    Debug.LogError($"❌ [NoCodes] Purchase failed: {error.Message}");
-                    _appState.AddNoCodesEvent($"❌ Purchase failed: {error.Message}");
-                    onError?.Invoke(error.Message);
+                    Debug.LogError($"❌ [NoCodes] Purchase failed: {result.Error.Message}");
+                    _appState.AddNoCodesEvent($"❌ Purchase failed: {result.Error.Message}");
+                    onError?.Invoke(result.Error.Message);
                     return;
                 }
 
-                Debug.Log($"✅ [NoCodes] Purchase successful: {entitlements.Count} entitlements");
-                _appState.AddNoCodesEvent($"✅ Purchase successful!");
-                _appState.SetEntitlements(entitlements);
+                Debug.Log($"✅ [NoCodes] Purchase successful: {result.Entitlements?.Count ?? 0} entitlements");
+                _appState.AddNoCodesEvent($"✅ Purchase successful! Status: {result.Status}, Entitlements: {result.Entitlements?.Count ?? 0}");
+                if (result.Entitlements != null)
+                {
+                    _appState.SetEntitlements(result.Entitlements);
+                }
                 onSuccess?.Invoke();
             });
         }
@@ -260,6 +266,48 @@ namespace QonversionSample
         }
 
         #endregion
+        
+        private void LogPurchaseResult(PurchaseResult result, string tag)
+        {
+            Debug.Log($"{tag} === Purchase Result ===");
+            Debug.Log($"{tag}   Status: {result.Status}");
+            Debug.Log($"{tag}   Source: {result.Source}");
+            Debug.Log($"{tag}   IsFallbackGenerated: {result.IsFallbackGenerated}");
+            Debug.Log($"{tag}   IsSuccess: {result.IsSuccess}");
+            Debug.Log($"{tag}   IsCanceled: {result.IsCanceled}");
+            Debug.Log($"{tag}   IsPending: {result.IsPending}");
+            Debug.Log($"{tag}   IsError: {result.IsError}");
+            
+            if (result.Error != null)
+            {
+                Debug.Log($"{tag}   Error Code: {result.Error.Code}");
+                Debug.Log($"{tag}   Error Message: {result.Error.Message}");
+            }
+            
+            if (result.StoreTransaction != null)
+            {
+                var tx = result.StoreTransaction;
+                Debug.Log($"{tag}   --- Store Transaction ---");
+                Debug.Log($"{tag}     Transaction ID: {tx.TransactionId ?? "N/A"}");
+                Debug.Log($"{tag}     Original TX ID: {tx.OriginalTransactionId ?? "N/A"}");
+                Debug.Log($"{tag}     Product ID: {tx.ProductId ?? "N/A"}");
+                Debug.Log($"{tag}     Quantity: {tx.Quantity}");
+                Debug.Log($"{tag}     Transaction Date: {tx.TransactionDate?.ToString() ?? "N/A"}");
+                Debug.Log($"{tag}     Promo Offer ID: {tx.PromoOfferId ?? "N/A"}");
+                Debug.Log($"{tag}     Purchase Token: {(tx.PurchaseToken != null ? tx.PurchaseToken.Substring(0, System.Math.Min(20, tx.PurchaseToken.Length)) + "..." : "N/A")}");
+            }
+            
+            if (result.Entitlements != null && result.Entitlements.Count > 0)
+            {
+                Debug.Log($"{tag}   --- Entitlements ({result.Entitlements.Count}) ---");
+                foreach (var pair in result.Entitlements)
+                {
+                    Debug.Log($"{tag}     • {pair.Key} (active: {pair.Value.IsActive})");
+                }
+            }
+            
+            Debug.Log($"{tag} =======================");
+        }
 
         private void OnDestroy()
         {

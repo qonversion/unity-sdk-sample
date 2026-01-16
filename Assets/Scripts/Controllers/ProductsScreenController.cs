@@ -185,28 +185,76 @@ namespace QonversionSample
             Debug.Log($"🔄 [Qonversion] Purchasing product: {product.QonversionId}...");
             AppState.SetLoading(true);
 
-            Qonversion.GetSharedInstance().PurchaseProduct(product, (entitlements, error, cancelled) =>
+            Qonversion.GetSharedInstance().Purchase(product, (result) =>
             {
                 AppState.SetLoading(false);
+                
+                // Log full PurchaseResult details
+                LogPurchaseResult(result);
 
-                if (cancelled)
+                if (result.IsCanceled)
                 {
                     Debug.Log("ℹ️ [Qonversion] Purchase cancelled by user");
                     AppState.ShowSuccess("Purchase cancelled");
                     return;
                 }
 
-                if (error != null)
+                if (result.Error != null)
                 {
-                    Debug.LogError($"❌ [Qonversion] Purchase failed: {error.Message}");
-                    AppState.ShowError($"Purchase failed: {error.Message}");
+                    Debug.LogError($"❌ [Qonversion] Purchase failed: {result.Error.Message}");
+                    AppState.ShowError($"Purchase failed: {result.Error.Message}");
                     return;
                 }
 
-                Debug.Log($"✅ [Qonversion] Purchase successful: {entitlements.Count} entitlements");
-                AppState.SetEntitlements(entitlements);
-                AppState.ShowSuccess("Purchase successful!");
+                Debug.Log($"✅ [Qonversion] Purchase successful: {result.Entitlements?.Count ?? 0} entitlements");
+                if (result.Entitlements != null)
+                {
+                    AppState.SetEntitlements(result.Entitlements);
+                }
+                AppState.ShowSuccess($"Purchase successful! Status: {result.Status}, Entitlements: {result.Entitlements?.Count ?? 0}");
             });
+        }
+        
+        private void LogPurchaseResult(PurchaseResult result)
+        {
+            Debug.Log("=== Purchase Result ===");
+            Debug.Log($"  Status: {result.Status}");
+            Debug.Log($"  Source: {result.Source}");
+            Debug.Log($"  IsFallbackGenerated: {result.IsFallbackGenerated}");
+            Debug.Log($"  IsSuccess: {result.IsSuccess}");
+            Debug.Log($"  IsCanceled: {result.IsCanceled}");
+            Debug.Log($"  IsPending: {result.IsPending}");
+            Debug.Log($"  IsError: {result.IsError}");
+            
+            if (result.Error != null)
+            {
+                Debug.Log($"  Error Code: {result.Error.Code}");
+                Debug.Log($"  Error Message: {result.Error.Message}");
+            }
+            
+            if (result.StoreTransaction != null)
+            {
+                var tx = result.StoreTransaction;
+                Debug.Log("  --- Store Transaction ---");
+                Debug.Log($"    Transaction ID: {tx.TransactionId ?? "N/A"}");
+                Debug.Log($"    Original TX ID: {tx.OriginalTransactionId ?? "N/A"}");
+                Debug.Log($"    Product ID: {tx.ProductId ?? "N/A"}");
+                Debug.Log($"    Quantity: {tx.Quantity}");
+                Debug.Log($"    Transaction Date: {tx.TransactionDate?.ToString() ?? "N/A"}");
+                Debug.Log($"    Promo Offer ID: {tx.PromoOfferId ?? "N/A"}");
+                Debug.Log($"    Purchase Token: {(tx.PurchaseToken != null ? tx.PurchaseToken.Substring(0, System.Math.Min(20, tx.PurchaseToken.Length)) + "..." : "N/A")}");
+            }
+            
+            if (result.Entitlements != null && result.Entitlements.Count > 0)
+            {
+                Debug.Log($"  --- Entitlements ({result.Entitlements.Count}) ---");
+                foreach (var pair in result.Entitlements)
+                {
+                    Debug.Log($"    • {pair.Key} (active: {pair.Value.IsActive})");
+                }
+            }
+            
+            Debug.Log("=======================");
         }
     }
 }
