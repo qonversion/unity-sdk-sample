@@ -1,7 +1,7 @@
 <dependencies>
   <packages>
     <package>com.fasterxml.jackson.core:jackson-databind:2.11.1</package>
-    <package>io.qonversion:sandwich:7.3.0</package>
+    <package>io.qonversion:sandwich:7.4.0</package>
     <package>org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.61</package>
   </packages>
   <files />

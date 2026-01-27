@@ -15,6 +15,7 @@ namespace QonversionSample
 
         private TextField _contextKeyField;
         private TextField _localeField;
+        private DropdownField _themeDropdown;
         private Label _purchaseDelegateStatusLabel;
         private Label _noCodesStatusLabel;
         private VisualElement _eventsContainer;
@@ -167,6 +168,37 @@ namespace QonversionSample
             localeSection.Add(localeButtonsRow);
             
             content.Add(localeSection);
+
+            // Theme Section
+            var themeSection = CreateSection("Theme");
+            
+            var themeRow = new VisualElement();
+            themeRow.style.flexDirection = FlexDirection.Row;
+            themeRow.style.alignItems = Align.Center;
+            themeRow.style.marginBottom = 6;
+            
+            var themeLabel = new Label("Theme:");
+            themeLabel.style.color = new Color(0.7f, 0.7f, 0.7f, 1f);
+            themeLabel.style.fontSize = 9;
+            themeLabel.style.width = 70;
+            themeRow.Add(themeLabel);
+            
+            _themeDropdown = new DropdownField();
+            _themeDropdown.choices = new System.Collections.Generic.List<string>
+            {
+                "Auto", "Light", "Dark"
+            };
+            _themeDropdown.value = "Auto";
+            _themeDropdown.style.flexGrow = 1;
+            _themeDropdown.style.fontSize = 9;
+            themeRow.Add(_themeDropdown);
+            
+            themeSection.Add(themeRow);
+            
+            var setThemeButton = CreateButton("Set Theme", SetTheme);
+            themeSection.Add(setThemeButton);
+            
+            content.Add(themeSection);
 
             // Actions Section
             var actionsSection = CreateSection("Actions");
@@ -461,6 +493,37 @@ namespace QonversionSample
             {
                 Debug.LogError($"❌ [NoCodes] Failed to reset locale: {e.Message}");
                 AppState.ShowError($"Failed to reset locale: {e.Message}");
+            }
+        }
+
+        private void SetTheme()
+        {
+            if (!AppState.NoCodesInitialized)
+            {
+                AppState.ShowError("No-Codes is not initialized");
+                return;
+            }
+
+            try
+            {
+                var themeString = _themeDropdown?.value ?? "Auto";
+                NoCodesTheme theme = themeString switch
+                {
+                    "Light" => NoCodesTheme.Light,
+                    "Dark" => NoCodesTheme.Dark,
+                    _ => NoCodesTheme.Auto
+                };
+
+                Debug.Log($"🔄 [NoCodes] Setting theme: {themeString}");
+                NoCodes.GetSharedInstance().SetTheme(theme);
+                Debug.Log("✅ [NoCodes] Theme set");
+                AppState.ShowSuccess($"Theme set to: {themeString}");
+                AppState.AddNoCodesEvent($"🎨 Theme set: {themeString}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"❌ [NoCodes] Failed to set theme: {e.Message}");
+                AppState.ShowError($"Failed to set theme: {e.Message}");
             }
         }
 

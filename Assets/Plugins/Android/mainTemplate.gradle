@@ -7,7 +7,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 // Android Resolver Dependencies Start
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.1' // Packages/com.qonversion.unity/Editor/QonversionDependencies.xml:5
-    implementation 'io.qonversion:sandwich:7.3.0' // Packages/com.qonversion.unity/Editor/QonversionDependencies.xml:4
+    implementation 'io.qonversion:sandwich:7.4.0' // Packages/com.qonversion.unity/Editor/QonversionDependencies.xml:4
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.61' // Packages/com.qonversion.unity/Editor/QonversionDependencies.xml:6
 // Android Resolver Dependencies End
 **DEPS**}
