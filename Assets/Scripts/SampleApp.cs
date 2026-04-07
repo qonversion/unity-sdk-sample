@@ -47,7 +47,7 @@ namespace QonversionSample
                 
                 // Subscribe to events
                 var instance = Qonversion.GetSharedInstance();
-                instance.UpdatedEntitlementsReceived += OnUpdatedEntitlementsReceived;
+                instance.DeferredPurchaseCompleted += OnDeferredPurchaseCompleted;
                 instance.PromoPurchasesReceived += OnPromoPurchasesReceived;
 
                 Debug.Log("✅ [Qonversion] SDK initialized successfully");
@@ -79,10 +79,13 @@ namespace QonversionSample
             });
         }
 
-        private void OnUpdatedEntitlementsReceived(System.Collections.Generic.Dictionary<string, Entitlement> entitlements)
+        private void OnDeferredPurchaseCompleted(PurchaseResult purchaseResult)
         {
-            Debug.Log($"📡 [Qonversion] Entitlements updated: {entitlements.Count} entitlements");
-            _appState.SetEntitlements(entitlements);
+            Debug.Log($"📡 [Qonversion] Deferred purchase completed");
+            if (purchaseResult.Entitlements != null)
+            {
+                _appState.SetEntitlements(purchaseResult.Entitlements);
+            }
         }
 
         private void OnPromoPurchasesReceived(string productId, Qonversion.StartPromoPurchase purchaseDelegate)
@@ -314,7 +317,7 @@ namespace QonversionSample
             var instance = Qonversion.GetSharedInstance();
             if (instance != null)
             {
-                instance.UpdatedEntitlementsReceived -= OnUpdatedEntitlementsReceived;
+                instance.DeferredPurchaseCompleted -= OnDeferredPurchaseCompleted;
                 instance.PromoPurchasesReceived -= OnPromoPurchasesReceived;
             }
         }
